@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Sistema de gestión de prendas</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      text-align: center;
+    }
+
+    .container {
+      margin-top: 40px;
+    }
+
+    .formulario, .lista {
+      display: none;
+      margin: 30px auto;
+      width: 500px;
+      text-align: left;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      margin: 8px 0;
+      box-sizing: border-box;
+    }
+
+    button {
+      padding: 10px 15px;
+      margin: 5px;
+      cursor: pointer;
+    }
+
+    .prenda {
+      background-color: #f0f0f0;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+    }
+
+    .prenda button {
+      margin-top: 10px;
+    }
+
+    .prenda-eliminar {
+      background-color: #f44336;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+
+    .prenda-eliminar:hover {
+      background-color: #d32f2f;
+    }
+
+    .prenda-modificar {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+
+    .prenda-modificar:hover {
+      background-color: #388E3C;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Sistema de gestión de prendas</h1>
+    <button onclick="mostrarSeccion('ingresar')">Ingresar prenda</button>
+    <button onclick="mostrarSeccion('ver')">Ver prendas</button>
+  </div>
+
+  <!-- Formulario Ingresar -->
+  <div class="formulario" id="formulario-ingresar-prenda">
+    <h2>Ingresar nueva prenda</h2>
+    <form onsubmit="guardarPrenda(event)">
+      <label for="talla">Talla:</label>
+      <input type="text" id="talla" required>
+
+      <label for="color">Color:</label>
+      <input type="text" id="color" required>
+
+      <label for="descripcion">Descripción:</label>
+      <input type="text" id="descripcion" required>
+
+      <button type="submit">Guardar</button>
+    </form>
+  </div>
+
+  <!-- Lista de prendas -->
+  <div class="lista" id="lista-prendas">
+    <h2>Lista de prendas</h2>
+    <ul id="lista-prendas-ul"></ul>
+  </div>
+
+  <!-- Formulario Modificar -->
+  <div class="formulario" id="formulario-modificar-prenda">
+    <h2>Modificar prenda</h2>
+    <form onsubmit="guardarModificaciones(event)">
+      <label for="talla-modificar">Talla:</label>
+      <input type="text" id="talla-modificar" required>
+
+      <label for="color-modificar">Color:</label>
+      <input type="text" id="color-modificar" required>
+
+      <label for="descripcion-modificar">Descripción:</label>
+      <input type="text" id="descripcion-modificar" required>
+
+      <button type="submit">Guardar cambios</button>
+    </form>
+  </div>
+
+  <script>
+    let listaPrendas = JSON.parse(localStorage.getItem('prendas')) || [];
+    let prendaSeleccionadaIndex = null;
+
+    function mostrarSeccion(seccion) {
+      document.getElementById('formulario-ingresar-prenda').style.display = 'none';
+      document.getElementById('lista-prendas').style.display = 'none';
+      document.getElementById('formulario-modificar-prenda').style.display = 'none';
+
+      if (seccion === 'ingresar') {
+        document.getElementById('formulario-ingresar-prenda').style.display = 'block';
+      } else if (seccion === 'ver') {
+        document.getElementById('lista-prendas').style.display = 'block';
+        renderizarListaPrendas();
+      } else if (seccion === 'modificar') {
+        document.getElementById('formulario-modificar-prenda').style.display = 'block';
+      }
+    }
+
+    function guardarPrenda(event) {
+      event.preventDefault();
+      const prenda = {
+        talla: document.getElementById('talla').value,
+        color: document.getElementById('color').value,
+        descripcion: document.getElementById('descripcion').value
+      };
+      listaPrendas.push(prenda);
+      localStorage.setItem('prendas', JSON.stringify(listaPrendas));
+      event.target.reset();
+      mostrarSeccion('ver');
+    }
+
+    function renderizarListaPrendas() {
+      const lista = document.getElementById('lista-prendas-ul');
+      lista.innerHTML = '';
+
+      if (listaPrendas.length === 0) {
+        lista.innerHTML = '<li>No hay prendas registradas.</li>';
+        return;
+      }
+
+      listaPrendas.forEach((prenda, index) => {
+        const li = document.createElement('li');
+        li.className = 'prenda';
+        li.innerHTML = `
+          <strong>Talla:</strong> ${prenda.talla}<br>
+          <strong>Color:</strong> ${prenda.color}<br>
+          <strong>Descripción:</strong> ${prenda.descripcion}<br>
+          <button class="prenda-modificar" onclick="seleccionarPrenda(${index})">Modificar</button>
+          <button class="prenda-eliminar" onclick="eliminarPrenda(${index})">Eliminar</button>
+        `;
+        lista.appendChild(li);
+      });
+    }
+
+    function eliminarPrenda(index) {
+      if (confirm('¿Estás seguro de eliminar esta prenda?')) {
+        listaPrendas.splice(index, 1);
+        localStorage.setItem('prendas', JSON.stringify(listaPrendas));
+        renderizarListaPrendas();
+      }
+    }
+
+    function seleccionarPrenda(index) {
+      prendaSeleccionadaIndex = index;
+      const prenda = listaPrendas[index];
+      document.getElementById('talla-modificar').value = prenda.talla;
+      document.getElementById('color-modificar').value = prenda.color;
+      document.getElementById('descripcion-modificar').value = prenda.descripcion;
+      mostrarSeccion('modificar');
+    }
+
+    function guardarModificaciones(event) {
+      event.preventDefault();
+      if (prendaSeleccionadaIndex !== null) {
+        listaPrendas[prendaSeleccionadaIndex] = {
+          talla: document.getElementById('talla-modificar').value,
+          color: document.getElementById('color-modificar').value,
+          descripcion: document.getElementById('descripcion-modificar').value
+        };
+        localStorage.setItem('prendas', JSON.stringify(listaPrendas));
+        mostrarSeccion('ver');
+      }
+    }
+
+    // Mostrar sección "ver" por defecto
+    mostrarSeccion('ver');
+  </script>
+</body>
+</html>
